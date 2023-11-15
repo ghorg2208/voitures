@@ -35,6 +35,11 @@ class Vehicule
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $date_enregistrement = null;
 
+
+    public function __construct()
+    {
+        $this->setDateEnregistrement(new \DateTimeImmutable());
+    }
     public function getId(): ?int
     {
         return $this->id_vehicule;
@@ -130,4 +135,6 @@ class Vehicule
 
         return $this;
     }
+
+
 }

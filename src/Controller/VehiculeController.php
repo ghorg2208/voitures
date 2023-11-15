@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class VehiculeController extends AbstractController
 {
-    #[Route('/', name: 'app_vehicule')]
+    #[Route('/vehicule/index', name: 'app_vehicule')]
     public function index(VehiculeRepository $vehiculeRepository): Response
 {
     $vehicules = $vehiculeRepository->findAll();

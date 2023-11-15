@@ -2,29 +2,31 @@
 
 namespace App\Form;
 
-use App\Entity\Vehicule;
+use App\Entity\Membre;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class VehiculeType extends AbstractType
+class MembreType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('titre')
-            ->add('marque')
-            ->add('modele')
-            ->add('description')
-            ->add('photo')
-            ->add('prix_journalier')
-        ;
+            ->add('id_membre')
+            ->add('pseudo')
+            ->add('mdep')
+            ->add('nom')
+            ->add('prenom')
+            ->add('email')
+            ->add('civilite')
+            ->add('statut')
+            ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => Vehicule::class,
+            'data_class' => Membre::class,
         ]);
     }
 }
