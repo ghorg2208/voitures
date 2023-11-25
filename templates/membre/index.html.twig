@@ -1,42 +1,48 @@
-{# templates/membre/index.html.twig #}
+{% extends 'back.html.twig' %}
 
-{% extends 'base.html.twig' %}
+{% block title %}Membre index{% endblock %}
 
-{% block title %}Liste des Membres{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/scipt.js') }}"></script>
+{% endblock %}
 
-{% block body %}
-<h1>Liste des Membres</h1>
+{% block bodyback %}
+    <h1>Membre index</h1>
 
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Pseudo</th>
-            <th>Nom</th>
-            <th>Prénom</th>
-            <th>Email</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
+    <table class="table table-striped" id="myTable">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Pseudo</th>
+                <th>Nom</th>
+                <th>Prenom</th>
+                <th>Email</th>
+                <th>Civilite</th>
+                <th>Statut</th>
+                <th>Date_enregistrement</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
         {% for membre in membres %}
-        <tr>
-            <td>{{ membre.idMembre }}</td>
-            <td>{{ membre.pseudo }}</td>
-            <td>{{ membre.nom }}</td>
-            <td>{{ membre.prenom }}</td>
-            <td>{{ membre.email }}</td>
-            <td>
-                <a href="{{ path('membre_edit', {'id': membre.id}) }}">Modifier</a>
-                <form action="{{ path('membre_delete', {'id': membre.id}) }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce membre ?');">
-                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ membre.id) }}">
-                    <button class="btn btn-danger" type="submit">Supprimer</button>
-                </form>
-            </td>
-        </tr>
+            <tr>
+                <td>{{ membre.id }}</td>
+                <td>{{ membre.pseudo }}</td>
+                <td>{{ membre.nom }}</td>
+                <td>{{ membre.prenom }}</td>
+                <td>{{ membre.email }}</td>
+                <td>{{ membre.civilite }}</td>
+                <td>{{ membre.getLibelStatusForTableau() }}</td>
+                <td>{{ membre.dateEnregistrement ? membre.dateEnregistrement|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_membre_show', {'id': membre.id}) }}" class="btn btn-info">Voire</a>
+                    <a href="{{ path('app_membre_edit', {'id': membre.id}) }}" class="btn btn-warning">Modifier</a>
+                </td>
+            </tr>
         {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
 
-<a href="{{ path('membre_create') }}">Créer un nouveau membre</a>
+    <a href="{{ path('app_membre_new') }}" class="btn btn-success">Créer</a>
 {% endblock %}

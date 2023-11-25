@@ -2,78 +2,194 @@
 
 namespace App\Controller;
 
+use App\Entity\Commande;
 use App\Entity\Vehicule;
+use App\Form\FiltreSearchType;
 use App\Form\VehiculeType;
 use App\Repository\VehiculeRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class VehiculeController extends AbstractController
+#[Route('/vehicule')]
+class VehiculeController extends EvalAbstractController
 {
-    #[Route('/vehicule/index', name: 'app_vehicule')]
+    #[Route('/admin', name: 'app_vehicule_index', methods: ['GET'])]
     public function index(VehiculeRepository $vehiculeRepository): Response
-{
-    $vehicules = $vehiculeRepository->findAll();
-    return $this->render('vehicule/index.html.twig', [
-        'vehicules' => $vehicules,
-    ]);
-}
-
-  #[Route("/vehicule/create", name: "vehicule_create")]
-
-    public function create(Request $request, EntityManagerInterface $entityManager): Response
-{
-    $vehicule = new Vehicule();
-    $form = $this->createForm(VehiculeType::class, $vehicule);
-
-    $form->handleRequest($request);
-    if ($form->isSubmitted() && $form->isValid()) {
-        $entityManager->persist($vehicule);
-        //dd($vehicule);
-        $entityManager->flush();
-
-        return $this->redirectToRoute('app_vehicule');
+    {
+        if($this->session->has('idVehiculeConnexion')){
+            $this->session->remove('idVehiculeConnexion');
+        }
+        return $this->render('vehicule/index.html.twig', [
+            'vehicules' => $vehiculeRepository->findAll(),
+        ]);
     }
 
-    return $this->render('vehicule/create.html.twig', [
-        'form' => $form->createView(),
-    ]);
-}
+    #[Route('/admin/new', name: 'app_vehicule_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $vehicule = new Vehicule();
+        $form = $this->createForm(VehiculeType::class, $vehicule, [
+            'labelSubmit' => 'Créer'
+        ]);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted()){
+            if($form['photo']->getData() != null){
+                $allowedExtensions = ['jpg', 'jpeg', 'png'];
+                $file = $form['photo']->getData();
+                $originalExtension = $file->getClientOriginalExtension();
+                if (!in_array($originalExtension, $allowedExtensions)) {
+                    $form->get('photo')->addError(new FormError("L'image doit avoir comme extension jpg, png ou jpeg"));
+                }
+            }
+            if ($form->isValid()) {;
+                $fileSystem = new Filesystem();
+                $fileName = rand(1, 999999999).'.'.$file->getClientOriginalExtension();
+                $fileSystem->copy($file->getPathname(), 'images/' . $fileName);
+                $vehicule->setPhoto('images/'.$fileName);
+                $vehicule->setDateEnregistrement(new \DateTime('now'));
+                $entityManager->persist($vehicule);
+                $entityManager->flush();
+
+                return $this->redirectToRoute('app_vehicule_index', [], Response::HTTP_SEE_OTHER);
+            }else{
+                $this->showErrorFlash($vehicule);
+            }
+        }
 
 
-  #[Route("/vehicule/edit/{id}", name: "vehicule_edit")]
-
-
-public function edit(Request $request, Vehicule $vehicule, EntityManagerInterface $entityManager): Response
-{
-    $form = $this->createForm(VehiculeType::class, $vehicule);
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        $entityManager->flush();
-        return $this->redirectToRoute('app_vehicule');
+        return $this->render('vehicule/new.html.twig', [
+            'vehicule' => $vehicule,
+            'form' => $form,
+        ]);
     }
 
-    return $this->render('vehicule/edit.html.twig', [
-        'form' => $form->createView(),
-    ]);
-}
+    #[Route('/admin/{id}/show', name: 'app_vehicule_show', methods: ['GET'])]
+    public function show(Vehicule $vehicule): Response
+    {
+        return $this->render('vehicule/show.html.twig', [
+            'vehicule' => $vehicule,
+        ]);
+    }
 
- 
-  #[Route("/vehicule/delete/{id}", name: "vehicule_delete")]
+    #[Route('/admin/{id}/edit', name: 'app_vehicule_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Vehicule $vehicule, EntityManagerInterface $entityManager): Response
+    {
+        $oldFile = $vehicule->getPhoto();
+        $form = $this->createForm(VehiculeType::class, $vehicule, [
+            'labelSubmit' => 'Modifier'
+        ]);
+        $form->handleRequest($request);
 
+        if($form->isSubmitted()){
+            if($form['photo']->getData() != null) {
+                $allowedExtensions = ['jpg', 'jpeg', 'png'];
+                $file = $form['photo']->getData();
+                $originalExtension = $file->getClientOriginalExtension();
+                if (!in_array($originalExtension, $allowedExtensions)) {
+                    $form->get('photo')->addError(new FormError("L'image doit avoir comme extension jpg, png ou jpeg"));
+                }
+            }
+            if ($form->isValid()) {
+                try {
+                    unlink($oldFile);
+                } catch (\Exception $e) {
+                }
+                $fileSystem = new Filesystem();
+                $file = $form['photo']->getData();
+                $fileName = rand(1, 999999999).'.'.$file->getClientOriginalExtension();
+                $fileSystem->copy($file->getPathname(), 'images/' . $fileName);
+                $vehicule->setPhoto('images/'.$fileName);
+                $entityManager->flush();
 
-public function delete(Request $request, Vehicule $vehicule, EntityManagerInterface $entityManager): Response
-{
-    $entityManager->remove($vehicule);
-    $entityManager->flush();
+                return $this->redirectToRoute('app_vehicule_index', [], Response::HTTP_SEE_OTHER);
+            }else{
+                $this->showErrorFlash($vehicule);
+            }
+        }
 
-    return $this->redirectToRoute('app_vehicule');
-}
+        return $this->render('vehicule/edit.html.twig', [
+            'vehicule' => $vehicule,
+            'form' => $form,
+        ]);
+    }
 
+    #[Route('/admin/{id}/show', name: 'app_vehicule_delete', methods: ['POST'])]
+    public function delete(Request $request, Vehicule $vehicule, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete'.$vehicule->getId(), $request->request->get('_token'))) {
+            try {
+                unlink($vehicule->getPhoto());
+            } catch (\Exception $e) {
+            }
+            $entityManager->remove($vehicule);
+            $entityManager->flush();
+        }
 
+        return $this->redirectToRoute('app_vehicule_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/search', name: 'app_vehicule_search')]
+    public function search(Request $request): Response
+    {
+        $form = $this->createForm(FiltreSearchType::class, null, []);
+        $form->handleRequest($request);
+        if($form->isSubmitted()){
+            if($form->isValid()){
+                $data = $form->getData();
+                if($form->get('reinitialiser')->isClicked()){
+                    foreach ($data as $key => $value){
+                        $data[$key] = null;
+                    }
+                    $form = $this->createForm(FiltreSearchType::class, null, [])->createView();
+                }
+                $fitreEmpty = true;
+                foreach($data as $key => $value){
+                    if($value != null){
+                        $fitreEmpty = false;
+                        break;
+                    }
+                }
+                if($fitreEmpty == false){
+                    $vehicule = $this->vehiculeRepository->findVehiculeByDatesAndFiltre($data, $this->session->get('date_deb'), $this->session->get('date_fin'));
+                }
+            }
+        }
+        if(!isset($vehicule)){
+            $vehicule = $this->vehiculeRepository->findAllVehiculeFree($this->session->get('date_deb'), $this->session->get('date_fin'));
+        }
+        return $this->render('vehicule/search.html.twig', [
+            'form' => $form,
+            'vehicules' => $vehicule
+        ]);
+    }
+
+    #[Route('/{id}/reservation', name: 'app_reservation')]
+    public function reservation(Vehicule $vehicule)
+    {
+        $this->session->set('idVehiculeConnexion', $vehicule->getId());
+        return $this->render('reservation/index.html.twig', [
+            'vehicules' => $vehicule,
+            'dateDeb' => $this->session->has('date_deb') ? $this->session->get('date_deb') : new \DateTime('now'),
+            'dateFin' => $this->session->has('date_fin') ? $this->session->get('date_fin') : new \DateTime('now'),
+        ]);
+    }
+
+    #[Route('/{id}/reservation/create', name: 'app_reservation_create')]
+    public function createReservation(Vehicule $vehicule)
+    {
+        $commande = new Commande();
+        $commande->setDateEnregistrement(new \DateTime('now'))
+            ->setMembre($this->getUser())
+            ->setVehicule($vehicule)
+            ->setDateHeurDepart($this->session->get('date_deb'))
+            ->setDateHeurFin($this->session->get('date_fin'));
+        $this->commandeRepository->add($commande, true);
+        return $this->redirectToRoute('homepage');
+    }
 
 }

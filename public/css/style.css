@@ -1,0 +1,30 @@
+.champFormulaire {
+    text-align: center;
+}
+
+#accueil_submit{
+    margin-top: 20%
+}
+
+#menuBack{
+    border-right: 1px solid black;
+}
+
+.imageCollumn {
+    background: var(--th-bg);
+    color: var(--th-color) !important;
+    font-weight: normal;
+    text-align: left;
+    text-transform: capitalize;
+    vertical-align: baseline;
+    white-space: nowrap;
+}
+
+.imageIndex {
+    /*width: 300px;*/
+    height: 200px;
+}
+
+.btnRetour{
+    margin-bottom: 15px;
+}

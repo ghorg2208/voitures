@@ -1,39 +1,48 @@
-{# templates/vehicule/index.html.twig #}
+{% extends 'back.html.twig' %}
 
-{% extends 'base.html.twig' %}
+{% block title %}Vehicule index{% endblock %}
 
-{% block title %}Liste des Véhicules{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/scipt.js') }}"></script>
+{% endblock %}
 
-{% block body %}
-<h1>Liste des Véhicules</h1>
+{% block bodyback %}
+    <h1>Vehicule index</h1>
 
-<a href="{{ path('membre_list') }}" class="btn btn-primary">Gérer les Membres</a>
-
-<table>
-    <thead>
-        <tr>
-            <th>Titre</th>
-            <th>Marque</th>
-            <th>Modèle</th>
-            <th>Prix Journalier</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
+    <table class="table table-striped" id="myTable">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Titre</th>
+                <th>Marque</th>
+                <th>Modele</th>
+                <th>Description</th>
+                <th class="imageCollumn">Photo</th>
+                <th>Prix_journalier</th>
+                <th>Date_enregistrement</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
         {% for vehicule in vehicules %}
-        <tr>
-            <td>{{ vehicule.GetTitre }}</td>
-            <td>{{ vehicule.GetMarque }}</td>
-            <td>{{ vehicule.GetModele }}</td>
-            <td>{{ vehicule.prixJournalier }}</td>
-            <td>
-                <a href="{{ path('vehicule_edit', {'id': vehicule.id}) }}">Modifier</a>
-                <a href="{{ path('vehicule_delete', {'id': vehicule.id}) }}">Supprimer</a>
-            </td>
-        </tr>
+            <tr>
+                <td>{{ vehicule.id }}</td>
+                <td>{{ vehicule.titre }}</td>
+                <td>{{ vehicule.marque }}</td>
+                <td>{{ vehicule.modele }}</td>
+                <td>{{ vehicule.description }}</td>
+                <td><img class="imageIndex" src="{{ asset( vehicule.photo ) }}"></td>
+                <td>{{ vehicule.prixJournalier }}</td>
+                <td>{{ vehicule.dateEnregistrement ? vehicule.dateEnregistrement|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_vehicule_show', {'id': vehicule.id}) }}" class="btn btn-info">Voire</a>
+                    <a href="{{ path('app_vehicule_edit', {'id': vehicule.id}) }}" class="btn btn-warning">Modifier</a>
+                </td>
+            </tr>
         {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
 
-<a href="{{ path('vehicule_create') }}">Créer un nouveau véhicule</a>
+    <a href="{{ path('app_vehicule_new') }}" class="btn btn-success">Créer</a>
 {% endblock %}

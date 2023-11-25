@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vehicule{% endblock %}
+
+{% block body %}
+    <p class="d-inline-flex gap-1">
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+            Afficher formulaire pour filtrer
+        </button>
+    </p>
+    <div class="collapse" id="collapseExample">
+        <div class="card card-body">
+            {{ form(form) }}
+        </div>
+    </div>
+    <h1>Vehicules disponibles</h1>
+    {% for vehicule in vehicules %}
+        <h2>{{ vehicule.titre }}</h2>
+        <img class="imageIndex" src="{{ asset( vehicule.photo ) }}" alt="image voiture">
+        <p>{{ vehicule.description }}</p>
+        <p>{{ vehicule.prixJournalier }}€ / {{ vehicule.marque }}</p>
+        <a href="{{ path('app_reservation', {'id': vehicule.id}) }}" class="btn btn-success">Voire l'offre</a>
+        <hr>
+    {% endfor %}
+    {% if vehicules is empty %}
+        <p>Aucun véhicule n'est disponible pour vos date s de réservations</p>
+    {% endif %}
+{% endblock %}

@@ -6,16 +6,15 @@ use App\Entity\Membre;
 use App\Form\MembreType;
 use App\Repository\MembreRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
-class MembreController extends AbstractController
+#[Route('/membre')]
+class MembreController extends EvalAbstractController
 {
-
-      #[Route("/membre", name: "membre_list")]
-
+    #[Route('/admin', name: 'app_membre_index', methods: ['GET'])]
     public function index(MembreRepository $membreRepository): Response
     {
         return $this->render('membre/index.html.twig', [
@@ -23,56 +22,89 @@ class MembreController extends AbstractController
         ]);
     }
 
-
-      #[Route("/membre/create", name: "membre_create")]
-
-    public function create(Request $request, EntityManagerInterface $entityManager): Response
+    #[Route('/admin/new', name: 'app_membre_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager,
+                        UserPasswordHasherInterface $userPasswordHasher): Response
     {
         $membre = new Membre();
-        $form = $this->createForm(MembreType::class, $membre);
+        $form = $this->createForm(MembreType::class, $membre, [
+            'statusChoice' => (new Membre())->getLibelStatusForForm(),
+            'labelSubmit' => 'Créer'
+        ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($membre);
-            $entityManager->flush();
+        if ($form->isSubmitted()) {
+            if($form->isValid()) {
+                $membre->setDateEnregistrement(new \DateTime('now'));
+                $membre->setMdp(
+                    $userPasswordHasher->hashPassword(
+                        $membre,
+                        $membre->getMdp()
+                    )
+                );
+                $entityManager->persist($membre);
+                $entityManager->flush();
 
-            return $this->redirectToRoute('membre_list');
+                return $this->redirectToRoute('app_membre_index', [], Response::HTTP_SEE_OTHER);
+            }else{
+                $this->showErrorFlash($membre);
+            }
         }
 
-        return $this->render('membre/create.html.twig', [
-            'form' => $form->createView(),
+        return $this->render('membre/new.html.twig', [
+            'membre' => $membre,
+            'form' => $form,
         ]);
     }
 
-
-      #[Route("/membre/edit/{id}", name: "membre_edit")]
-
-    public function edit(Request $request, Membre $membre, EntityManagerInterface $entityManager): Response
+    #[Route('/admin/{id}', name: 'app_membre_show', methods: ['GET'])]
+    public function show(Membre $membre): Response
     {
-        $form = $this->createForm(MembreType::class, $membre);
+        return $this->render('membre/show.html.twig', [
+            'membre' => $membre,
+        ]);
+    }
+
+    #[Route('/admin/{id}/edit', name: 'app_membre_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Membre $membre, EntityManagerInterface $entityManager,
+                         UserPasswordHasherInterface $userPasswordHasher): Response
+    {
+        $form = $this->createForm(MembreType::class, $membre, [
+            'statusChoice' => (new Membre())->getLibelStatusForForm(),
+            'labelSubmit' => 'Modifier'
+        ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
+        if ($form->isSubmitted()) {
+            if($form->isValid()) {
+                $membre->setMdp(
+                    $userPasswordHasher->hashPassword(
+                        $membre,
+                        $membre->getMdp()
+                    )
+                );
+                $entityManager->flush();
 
-            return $this->redirectToRoute('membre_list');
+                return $this->redirectToRoute('app_membre_index', [], Response::HTTP_SEE_OTHER);
+            }else{
+                $this->showErrorFlash($membre);
+            }
         }
 
         return $this->render('membre/edit.html.twig', [
-            'form' => $form->createView(),
+            'membre' => $membre,
+            'form' => $form,
         ]);
     }
 
-
-      #[Route("/membre/delete/{id}", name: "membre_delete")]
-
+    #[Route('/admin/{id}', name: 'app_membre_delete', methods: ['POST'])]
     public function delete(Request $request, Membre $membre, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$membre->getIdMembre(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$membre->getId(), $request->request->get('_token'))) {
             $entityManager->remove($membre);
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('membre_list');
+        return $this->redirectToRoute('app_membre_index', [], Response::HTTP_SEE_OTHER);
     }
 }

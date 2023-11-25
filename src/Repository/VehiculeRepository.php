@@ -21,28 +21,57 @@ class VehiculeRepository extends ServiceEntityRepository
         parent::__construct($registry, Vehicule::class);
     }
 
-//    /**
-//     * @return Vehicule[] Returns an array of Vehicule objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('v')
-//            ->andWhere('v.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('v.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function add(Vehicule $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($entity);
 
-//    public function findOneBySomeField($value): ?Vehicule
-//    {
-//        return $this->createQueryBuilder('v')
-//            ->andWhere('v.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function remove(Vehicule $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->remove($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function findAllVehiculeFreeQuery($date_deb, $date_fin){
+        $queryBuilder = $this->createQueryBuilder('v');
+
+        $queryBuilder
+            ->leftJoin('v.commandes', 'c')
+            ->andWhere('c.id IS NULL OR (:dateDebut < c.date_heur_depart AND 
+            :dateFin < c.date_heur_depart) 
+            OR (:dateDebut > c.date_heur_fin AND 
+            :dateFin > c.date_heur_fin)')
+            ->setParameter('dateDebut', $date_deb)
+            ->setParameter('dateFin', $date_fin);
+
+        return $queryBuilder;
+    }
+
+    public function findAllVehiculeFree($date_deb, $date_fin){
+        $queryBuilder = $this->findAllVehiculeFreeQuery($date_deb, $date_fin);
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    public function findVehiculeByDatesAndFiltre($data, $date_deb, $date_fin){
+        $queryBuilder = $this->findAllVehiculeFreeQuery($date_deb, $date_fin);
+        foreach ($data as $key => $value){
+            if(str_starts_with($key, 'order')){
+                $key = str_replace('order', '', $key);
+                $queryBuilder->orderBy('v.'.$key, $value);
+            } else if($value != null){
+                $queryBuilder->andWhere('upper(v.'.$key.') LIKE upper(:'.$key.')')
+                    ->setParameter(':'.$key, '%' . $value . '%');
+            }
+        }
+        return $queryBuilder->getQuery()->getResult();
+    }
+
 }

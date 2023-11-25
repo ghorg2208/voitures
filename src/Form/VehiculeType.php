@@ -4,6 +4,8 @@ namespace App\Form;
 
 use App\Entity\Vehicule;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -16,8 +18,14 @@ class VehiculeType extends AbstractType
             ->add('marque')
             ->add('modele')
             ->add('description')
-            ->add('photo')
+            ->add('photo', FileType::class, [
+                'data_class' => null
+            ])
             ->add('prix_journalier')
+            ->add('submit', SubmitType::class, [
+                'label' => $options['labelSubmit'],
+                'validate' => false,
+            ])
         ;
     }
 
@@ -25,6 +33,7 @@ class VehiculeType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Vehicule::class,
+            'labelSubmit' => null
         ]);
     }
 }

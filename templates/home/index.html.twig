@@ -1,14 +1,27 @@
-{# templates/index.html.twig #}
-
 {% extends 'base.html.twig' %}
 
-{% block title %}Page d'Accueil{% endblock %}
+{% block title %}Accueil{% endblock %}
 
 {% block body %}
-    <h1>Bienvenue sur notre site</h1>
+    <h1 class="mb-5">Accueil</h1>
+    {{ form_start(form) }}
+    <div class="row">
+        <div class="col-2"></div>
+        <div class="col-3 champFormulaire">
+            {{ form_label(form.date_heur_depart) }}
+            {{ form_widget(form.date_heur_depart) }}
+            {{ form_errors(form.date_heur_depart) }}
+        </div>
 
-    <!-- Ajout d'un bouton pour accéder aux véhicules -->
-    <a href="{{ path('app_vehicule') }}" class="btn btn-primary">Voir les Véhicules</a>
-
-    <!-- Autres contenus de la page d'accueil -->
+        <div class="col-3 champFormulaire">
+            {{ form_label(form.date_heur_fin) }}
+            {{ form_widget(form.date_heur_fin) }}
+            {{ form_errors(form.date_heur_fin) }}
+        </div>
+        <div class="col-2 champFormulaire">
+            {{ form_row(form.submit) }}
+        </div>
+        <div class="col-2"></div>
+    </div>
+    {{ form_end(form) }}
 {% endblock %}

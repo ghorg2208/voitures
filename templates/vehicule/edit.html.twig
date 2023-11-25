@@ -1,16 +1,13 @@
-{# templates/vehicule/edit.html.twig #}
+{% extends 'back.html.twig' %}
 
-{% extends 'base.html.twig' %}
+{% block title %}Modifier Vehicule{% endblock %}
 
-{% block title %}Modifier Véhicule{% endblock %}
+{% block bodyback %}
+    <h1>Modifier Vehicule</h1>
 
-{% block body %}
-<h1>Modifier Véhicule</h1>
+    {{ include('vehicule/_form.html.twig', {'button_label': 'Modifier'}) }}
 
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn btn-primary">Modifier</button>
-{{ form_end(form) }}
+    <a href="{{ path('app_vehicule_index') }}" class="btn btn-secondary btnRetour">Retour a la liste</a>
 
-<a href="{{ path('app_vehicule') }}">Retour à la liste</a>
+    {{ include('vehicule/_delete_form.html.twig') }}
 {% endblock %}
